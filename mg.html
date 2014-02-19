@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<title>Moscow map with a new DOM</title>
+<link rel="stylesheet" href="qunit-git.css">
+<script
+src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDY0kkJiTPVd2U7aTOAwhc9ySH6oHxOIYM&sensor=false">
+</script>
+<script src="FullScreenControl.js" type="text/javascript"></script>
+<script src="qunit-git.js"></script>
+<script>
+var map;// переменная для карты
+var moscow = new google.maps.LatLng(55.751574, 37.573856);// центр Москвы
+
+
+// Добавление  Home control (элемент управления) для управления картой
+function HomeControl(controlDiv, map) {
+  controlDiv.style.padding = '7px';
+  //создаем элемент DIV  для размещения control (элемента управления картой)
+  var controlUI = document.createElement('div');
+  //задаем стили элементу
+  controlUI.style.backgroundColor = 'white';
+  controlUI.style.borderColor = '#717b87';
+  //controlUI.style.border='1px solid';
+  controlUI.style.cursor = 'pointer';
+  controlUI.style.textAlign = 'center';
+  controlUI.title = 'Set map to Moscow';
+  controlDiv.appendChild(controlUI);
+  //еще один DIV - для надписи на control
+  var controlText = document.createElement('div');
+  controlText.style.fontFamily='Arial,sans-serif';
+  controlText.style.fontSize='12px';
+  controlText.style.paddingLeft = '4px';
+  controlText.style.paddingRight = '4px';
+  controlText.innerHTML = '<b>Home<b>'
+  // добавляем его, как дочерний к DIV  с управляющим элементом
+  controlUI.appendChild(controlText);
+
+  // устанавливаем click-event listener: возврат  в центр Москвы - первоначальное положение карты
+  google.maps.event.addDomListener(controlUI, 'click', function() {
+    map.setCenter(moscow);
+	test( "проверка HOME управления", function() {
+		var center = map.getCenter();
+		equal( center, moscow, "Москва должна быть в центре" );
+		});
+	  
+  });
+}
+
+function initialize() {
+	// задаем переменную для контейнера карты
+  var mapDiv = document.getElementById('googleMap');
+  // задаем для карты первоначальное разрешение, центр(Москва -moscow  с уже заданными выше координатами), и тип карты
+  var myOptions = {
+    zoom: 9,
+    center: moscow,
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  }
+ 
+
+//задаем карту , используя google map API
+  map = new google.maps.Map(mapDiv, myOptions); 
+ 
+  // Создаем  DIV для  HOME control и вызываем функцию - HomeControl(),
+  var homeControlDiv = document.createElement('div');
+  var homeControl = new HomeControl(homeControlDiv, map);
+
+test( "zoom test", function() {
+	ok( true, map.scaleControl );// проверка, что pan,zoom и scale элементы  управления добавились на карту
+	ok( true, map.zoomControl );
+	ok( true, map.panControl );
+
+});
+// добавляем новые  элементы управления к карте через API google map
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(homeControlDiv); // возврат в центр
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(
+	  new FullScreenControl(map)); // элемент управления полный экран и обратно ( см. FullScreenControl.js) 
+	  // задаем прямоугольник для отрисовки домика коричневого цвета без заливки соответственно Google map javascript API v3
+	  var rectangle = new google.maps.Rectangle({
+    strokeColor: '#A52A2A',
+    strokeOpacity: 0.8,
+    strokeWeight: 3,
+    fillColor: '#FF0000',
+    fillOpacity: 0,// если >0, то будет заливка красного цвета
+    map: map,
+    bounds: new google.maps.LatLngBounds(
+      new google.maps.LatLng(55.747574, 37.613856),// задание координат квадрата
+      new google.maps.LatLng(55.754574, 37.633856))
+  });
+ 
+  var roof; 
+var roofCoords = [
+      new google.maps.LatLng(55.758574, 37.623856),//задание координат треугольника
+      new google.maps.LatLng(55.754574, 37.633856),
+      new google.maps.LatLng(55.754574, 37.613856)
+  ];
+
+  // Задаем треугольник соответственно Google map javascript API v3
+  roof = new google.maps.Polygon({
+    paths: roofCoords,
+    strokeColor: '#FF0000',
+    strokeOpacity: 0.8,
+    strokeWeight: 3,
+    fillColor: '#FF0000',
+    fillOpacity: 0.0  //если >0, то будет заливка красного цвета
+  });
+ //добавляем треугольник на карту (Google map javascript API v3)
+  roof.setMap(map);
+ 
+}
+// ждем пока документ загружен и начинаем работать с Google map
+google.maps.event.addDomListener(window, 'load', initialize);
+</script>
+</head>
+
+<body>
+ <div id="qunit"></div>
+<div id="qunit-fixture"></div>
+<div id="googleMap" style="width:500px;height:380px;"></div>
+</body>
+</html>
+
+
